@@ -33,11 +33,14 @@ bdlim <- function(Y,X,Z,G=NULL,inter.model="all",family=gaussian,niter=1000,nbur
 
 
   #account for missing input in priors
+  if(missing(prior)) prior <- NULL
+  if(is.null(prior$sigma)) prior$sigma <- c(0.001,0.001)
   if(is.null(prior$beta)) prior$beta <- Inf
   if(is.null(prior$gamma)) prior$gamma <- Inf
 
 
   #account for missing input in basis function
+  if(missing(basis.opts)) basis.opts <- NULL
   if(is.null(basis.opts$type)) basis.opts$type <- "face"
   if(is.null(basis.opts$df) & toupper(basis.opts$type)=="NS") basis.opts$df <- 5
   if(is.null(basis.opts$knots) & toupper(basis.opts$type)=="FACE") basis.opts$knots <- round(ncol(X)/3)
