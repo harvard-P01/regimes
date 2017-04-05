@@ -42,17 +42,30 @@ bdlim <- function(Y,X,Z,G=NULL,inter.model="all",family=gaussian,niter=1000,nbur
   #account for missing input in basis function
   if(missing(basis.opts)) basis.opts <- NULL
   if(is.null(basis.opts$type)) basis.opts$type <- "face"
-  if(is.null(basis.opts$df) & toupper(basis.opts$type)=="NS") basis.opts$df <- 5
-  if(is.null(basis.opts$knots) & toupper(basis.opts$type)=="FACE") basis.opts$knots <- round(ncol(X)/3)
-  if(is.null(basis.opts$pve) & toupper(basis.opts$type)=="FACE") basis.opts$pve <- .99
-
+  if(toupper(basis.opts$type)=="FACE"){
+    if(is.null(basis.opts$knots)) basis.opts$knots <- round(ncol(X)/3)
+    if(is.null(basis.opts$pve)) basis.opts$pve <- .99
+  }else if(toupper(basis.opts$type)=="NS"){
+    if(is.null(basis.opts$df) & !is.null(basis.opts$knots)){
+      basis.opts$df <- basis.opts$knots+2
+    }else if(is.null(basis.opts$df)){ 
+      basis.opts$df <- 5
+    }
+  }
   #make basis
   B <- bdlimbasis(as.matrix(X),knots=basis.opts$knots,df=basis.opts$df,pve=basis.opts$pve, type=basis.opts$type)
 
   #scaled data
   x <- X%*%B$psi
-  if(!is.factor(G)) G <- as.factor(G)
-  z1 <- model.matrix(~G+Z)
+  # print(G)
+  if(is.null(G)){
+    z1 <- model.matrix(~Z)
+    inter.model <- c("n")
+  }else{
+    if(!is.factor(G)) G <- as.factor(G)
+    z1 <- model.matrix(~G+Z-1)
+  }
+  # print(head(z1))
   z1 <- z1[,qr(z1)$pivot[1:qr(z1)$rank]]
   colnames(x) <- paste0("x",1:ncol(x))
 
